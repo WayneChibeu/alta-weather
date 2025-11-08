@@ -8,7 +8,7 @@ This is a simple, one-page weather application built with HTML, CSS, and plain J
 * Error handling for "city not found"
 
 ## Live Demo
-You can see the live, deployed version here: My weather app [(https://weather-app-sigma-henna-89.vercel.app/)]
+You can see the live, deployed version here: (https://weather-app-sigma-henna-89.vercel.app/)
 
 ## Technologies Used
 * HTML5
