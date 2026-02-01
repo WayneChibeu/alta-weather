@@ -13,6 +13,7 @@
 
 <body>
     <div class="app-container">
+        <button id="unitToggle" class="unit-toggle" aria-label="Toggle Units">°C</button>
         <h1>Alta</h1>
         <p class="subtitle">Your World, Clearer.</p>
 
@@ -23,6 +24,7 @@
         </div>
 
         <div id="loading" class="loading-spinner hidden"></div>
+        <div id="error-message" class="error-message hidden"></div>
 
         <div id="weather-display" class="weather-display-box hidden">
             <h3 id="cityName"></h3>
@@ -48,6 +50,21 @@
                     <span class="label">Wind</span>
                     <span id="windSpeed" class="value"></span>
                 </div>
+                <div class="detail fade-in-stagger" style="--i:4">
+                    <i class="ph ph-sun-horizon icon-large"></i>
+                    <span class="label">Sunrise</span>
+                    <span id="sunrise" class="value"></span>
+                </div>
+                <div class="detail fade-in-stagger" style="--i:5">
+                    <i class="ph ph-moon-stars icon-large"></i>
+                    <span class="label">Sunset</span>
+                    <span id="sunset" class="value"></span>
+                </div>
+            </div>
+
+            <!-- Forecast Section -->
+            <div id="forecast-container" class="forecast-container hidden fade-in-stagger" style="--i:6">
+                <!-- Forecast cards will be injected here via JS -->
             </div>
         </div>
     </div>

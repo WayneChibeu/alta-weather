@@ -15,7 +15,36 @@ const descElem = document.getElementById('description');
 const feelsLikeElem = document.getElementById('feelsLike');
 const humidityElem = document.getElementById('humidity');
 const windSpeedElem = document.getElementById('windSpeed');
+const sunriseElem = document.getElementById('sunrise');
+const sunsetElem = document.getElementById('sunset');
 const localTimeElem = document.getElementById('localTime');
+const unitToggle = document.getElementById('unitToggle');
+
+// State
+let currentUnit = localStorage.getItem('preferredUnit') || 'metric'; // 'metric' (C) or 'imperial' (F)
+let currentCity = localStorage.getItem('lastCity') || '';
+
+// Initialize
+updateUnitButton();
+if (currentCity) {
+    getWeather(currentCity);
+}
+
+// Event Listeners
+unitToggle.addEventListener('click', () => {
+    currentUnit = currentUnit === 'metric' ? 'imperial' : 'metric';
+    localStorage.setItem('preferredUnit', currentUnit);
+    updateUnitButton();
+
+    // Refresh weather if a city is already displayed
+    if (cityNameElem.textContent && currentCity) {
+        getWeather(currentCity);
+    }
+});
+
+function updateUnitButton() {
+    unitToggle.textContent = currentUnit === 'metric' ? '°C' : '°F';
+}
 
 // Add Enter key support
 cityInput.addEventListener('keyup', (event) => {
@@ -50,7 +79,12 @@ async function getWeather(city) {
 
         const data = await response.json();
 
+        // 1. Display Current Weather
         displayWeather(data);
+
+        // 2. Fetch and Display Forecast
+        // Note: We need a separate call because the endpoints are different.
+        getForecast(city);
 
     } catch (error) {
         showError(error.message);
@@ -82,20 +116,102 @@ async function getWeatherByCoords(lat, lon) {
     weatherDisplay.classList.add('hidden');
 
     try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${currentUnit}`);
 
         if (!response.ok) {
             throw new Error('Could not fetch weather data');
         }
 
         const data = await response.json();
+
+        // Save geo city name if possible, or just don't save "lastCity" for geo to avoid confusion
+        // Typically we want saved city to be readable. 
+        // For now, let's update currentCity so toggle works
+        currentCity = data.name;
+        localStorage.setItem('lastCity', currentCity);
+
+        currentCity = data.name;
+        localStorage.setItem('lastCity', currentCity);
+
         displayWeather(data);
+        getForecastByCoords(lat, lon); // New call
 
     } catch (error) {
         showError(error.message);
     } finally {
         loadingSpinner.classList.add('hidden');
     }
+}
+
+
+
+// Forecast Logic
+async function getForecast(city) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=${currentUnit}`);
+        if (!response.ok) return; // Silent fail for forecast if weather worked
+        const data = await response.json();
+        displayForecast(data);
+    } catch (error) {
+        console.error("Forecast Error:", error);
+    }
+}
+
+async function getForecastByCoords(lat, lon) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${currentUnit}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        displayForecast(data);
+    } catch (error) {
+        console.error("Forecast Error:", error);
+    }
+}
+
+function displayForecast(data) {
+    const forecastContainer = document.getElementById('forecast-container');
+    forecastContainer.innerHTML = ''; // Clear old
+    forecastContainer.classList.remove('hidden');
+
+    // Filter: OpenWeatherMap returns 40 items (every 3 hours).
+    // Strategy: Take one reading per day (e.g., closest to 12:00 PM).
+    // Or simpler: Just take the first reading of each distinct day that isn't TODAY.
+
+    // Group by Day
+    const dailyData = {};
+    data.list.forEach(item => {
+        const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+
+        // If we haven't stored this day yet, store it.
+        // This naturally picks the earliest available slot for next days, 
+        // ensuring we get 5 distinct days.
+        if (!dailyData[date]) {
+            dailyData[date] = item;
+        }
+    });
+
+    // Convert object to array and skip "Today" (if present in the first slot) if needed.
+    // Actually, usually the API returns "Today" as first items.
+    // Let's filter to ensure we show 5 days.
+
+    const days = Object.keys(dailyData);
+    // Limit to 5
+    const next5Days = days.slice(0, 5);
+
+    next5Days.forEach(day => {
+        const item = dailyData[day];
+
+        const card = document.createElement('div');
+        card.classList.add('forecast-card');
+
+        card.innerHTML = `
+            <div class="forecast-day">${day}</div>
+            <img class="forecast-icon" src="https://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="Icon">
+            <div class="forecast-temp">${Math.round(item.main.temp)}°</div>
+        `;
+
+        forecastContainer.appendChild(card);
+    });
 }
 
 function calculateLocalTime(timezoneOffset) {
@@ -122,7 +238,37 @@ function displayWeather(data) {
     descElem.textContent = data.weather[0].description;
     feelsLikeElem.textContent = `${Math.round(data.main.feels_like)}°`;
     humidityElem.textContent = `${data.main.humidity}%`;
-    windSpeedElem.textContent = `${data.wind.speed} m/s`;
+
+    // Wind speed unit depends on system
+    const windUnit = currentUnit === 'metric' ? 'm/s' : 'mph';
+    windSpeedElem.textContent = `${data.wind.speed} ${windUnit}`;
+
+    // Sunrise & Sunset
+    // Offset is in seconds, timestamps are in seconds. We need milliseconds for Date.
+    // Logic: Unix Time + Offset + UTC correction is tricky.
+    // Simpler: Create a date object with the timestamp * 1000 and formatted with the timezone.
+
+    // Helper to format time with timezone
+    const formatTimeObj = (timestamp, timezoneOffset) => {
+        const date = new Date((timestamp + timezoneOffset) * 1000);
+        // Note: The timestamp from API is UTC.
+        // Actually, simpler method:
+        // 1. Get UTC time in ms: timestamp * 1000
+        // 2. Add offset * 1000
+        // 3. Create new Date (but this gives "local" time of the browser with the shifted value)
+        // 4. Use .toUTCString() then slice? No.
+
+        // Correct way using the calculateLocalTime logic we already have:
+        // We essentially want `calculateLocalTime` but for a specific timestamp (not "now").
+
+        const utcMs = timestamp * 1000;
+        const localMs = utcMs + (new Date().getTimezoneOffset() * 60000) + (timezoneOffset * 1000);
+        const localDate = new Date(localMs);
+        return localDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    };
+
+    sunriseElem.textContent = formatTimeObj(data.sys.sunrise, data.timezone);
+    sunsetElem.textContent = formatTimeObj(data.sys.sunset, data.timezone);
 
     // Set Icon
     const iconCode = data.weather[0].icon;
