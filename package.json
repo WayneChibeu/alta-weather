@@ -1,0 +1,7 @@
+{
+  "name": "alta-weather",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node -e \"const fs = require('fs'); const content = 'const CONFIG = { API_KEY: \\\"' + (process.env.API_KEY || '') + '\\\" };'; fs.writeFileSync('config.js', content); console.log('Generated config.js');\""
+  }
+}
