@@ -2,6 +2,7 @@ const searchBtn = document.getElementById('searchBtn');
 const cityInput = document.getElementById('cityInput');
 const weatherDisplay = document.getElementById('weather-display');
 const loadingSpinner = document.getElementById('loading');
+const errorMessage = document.getElementById('error-message');
 
 // Use key from config.js
 const apiKey = CONFIG.API_KEY;
@@ -177,6 +178,7 @@ function updateBackground(weatherMain) {
 }
 
 function showError(message) {
-    weatherDisplay.innerHTML = `<p style="color: #ffcccc; font-weight: bold; margin-top: 20px;">${message}</p>`;
-    weatherDisplay.classList.remove('hidden');
+    errorMessage.innerHTML = `<p>${message}</p>`;
+    errorMessage.classList.remove('hidden');
+    weatherDisplay.classList.add('hidden');
 }

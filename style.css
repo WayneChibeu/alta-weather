@@ -165,6 +165,16 @@ h1 {
     margin-top: 1rem;
 }
 
+.error-message {
+    color: #ffcccc;
+    font-weight: bold;
+    margin-top: 20px;
+    background: rgba(255, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
 #cityName {
     font-size: 1.5rem;
     font-weight: 600;
