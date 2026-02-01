@@ -27,6 +27,9 @@
         <div id="error-message" class="error-message hidden"></div>
 
         <div id="weather-display" class="weather-display-box hidden">
+            <!-- Severe Weather Alert -->
+            <div id="severe-alert" class="alert-banner hidden"></div>
+
             <h3 id="cityName"></h3>
             <p id="localTime" class="local-time"></p>
             <div class="weather-main">
@@ -34,6 +37,12 @@
                 <p id="temperature" class="temp"></p>
             </div>
             <p id="description" class="desc"></p>
+
+            <!-- AI Outfit Recommender -->
+            <div id="outfit-recommendation" class="outfit-pill hidden fade-in-stagger" style="--i:0.5">
+                <span id="outfitText">Loading fit check...</span>
+            </div>
+
             <div class="weather-details">
                 <div class="detail fade-in-stagger" style="--i:1">
                     <i class="ph ph-thermometer-simple icon-large"></i>

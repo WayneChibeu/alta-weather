@@ -239,6 +239,24 @@ function displayWeather(data) {
     feelsLikeElem.textContent = `${Math.round(data.main.feels_like)}°`;
     humidityElem.textContent = `${data.main.humidity}%`;
 
+    // AI Outfit Recommendation
+    const outfit = getOutfitRecommendation(data.main.temp, data.weather[0].main);
+    const outfitElem = document.getElementById('outfit-recommendation');
+    const outfitText = document.getElementById('outfitText');
+
+    outfitText.textContent = outfit;
+    outfitElem.classList.remove('hidden');
+
+    // Severe Weather Alerts
+    const alertMessage = checkSevereWeather(data);
+    const alertBanner = document.getElementById('severe-alert');
+    if (alertMessage) {
+        alertBanner.textContent = alertMessage;
+        alertBanner.classList.remove('hidden');
+    } else {
+        alertBanner.classList.add('hidden');
+    }
+
     // Wind speed unit depends on system
     const windUnit = currentUnit === 'metric' ? 'm/s' : 'mph';
     windSpeedElem.textContent = `${data.wind.speed} ${windUnit}`;
@@ -279,6 +297,69 @@ function displayWeather(data) {
 
     // Show display
     weatherDisplay.classList.remove('hidden');
+}
+
+function getOutfitRecommendation(temp, weatherMain) {
+    // Normalize logic to Celsius
+    let tempC = temp;
+    if (currentUnit === 'imperial') {
+        tempC = (temp - 32) * (5 / 9);
+    }
+
+    const condition = weatherMain.toLowerCase();
+    let suggestion = "";
+
+    // Temperature Logic
+    if (tempC < 5) {
+        suggestion = "Heavy Coat & Scarf 🧣";
+    } else if (tempC >= 5 && tempC < 15) {
+        suggestion = "Jacket or Hoodie 🧥";
+    } else if (tempC >= 15 && tempC < 22) {
+        suggestion = "T-shirt & Jeans 👕";
+    } else {
+        suggestion = "Shorts & Shades 🕶️";
+    }
+
+    // Weather Condition Logic Overrides
+    if (condition.includes('rain') || condition.includes('drizzle') || condition.includes('thunderstorm')) {
+        suggestion += " + Umbrella ☂️";
+    } else if (condition.includes('snow')) {
+        suggestion = "Winter Gear & Boots 👢"; // Override for snow
+    }
+
+    return suggestion;
+}
+
+function checkSevereWeather(data) {
+    const tempK = data.main.temp;
+    // API returns Kelvin, Metric=Celsius, Imperial=Fahrenheit depending on query.
+    // Wait, the API returns units based on 'units' param.
+    // If currentUnit is metric, temp is C. If imperial, temp is F.
+    // We need standard comparison. Let's convert to Celsius for checks.
+
+    let tempC = data.main.temp;
+    if (currentUnit === 'imperial') {
+        tempC = (data.main.temp - 32) * 5 / 9;
+    }
+
+    const windSpeed = data.wind.speed;
+    // Wind: Metric=m/s, Imperial=mph.
+    // Threshold: 15 m/s or ~33 mph.
+    // If imperial, 33 mph. If metric, 15 m/s.
+
+    let isHighWind = false;
+    if (currentUnit === 'metric' && windSpeed > 15) isHighWind = true;
+    if (currentUnit === 'imperial' && windSpeed > 33) isHighWind = true;
+
+    const condition = data.weather[0].main.toLowerCase();
+
+    // Checks
+    if (condition === 'thunderstorm') return "⚠️ STORM ALERT: Stay indoors!";
+    if (isHighWind) return "⚠️ HIGH WIND WARNING: Secure loose objects.";
+    if (tempC > 35) return "⚠️ EXTREME HEAT: Stay hydrated.";
+    if (tempC < 0) return "⚠️ FREEZING: Watch for ice.";
+
+    return null; // No alerts
 }
 
 function updateBackground(weatherMain) {

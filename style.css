@@ -201,6 +201,37 @@ h1 {
     text-align: center;
 }
 
+.alert-banner {
+    background: rgba(220, 38, 38, 0.85);
+    /* Red warning color */
+    color: white;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: pulse 2s infinite;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
 #cityName {
     font-size: 1.5rem;
     font-weight: 600;
@@ -240,7 +271,24 @@ h1 {
     text-transform: capitalize;
     margin-bottom: 2rem;
     font-size: 1.25rem;
+    font-size: 1.25rem;
     opacity: 0.9;
+}
+
+/* Outfit Recommender */
+.outfit-pill {
+    background: linear-gradient(90deg, #ff9966, #ff5e62);
+    /* Default warm gradient */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(255, 94, 98, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: float 4s ease-in-out infinite;
 }
 
 /* Details Grid */
