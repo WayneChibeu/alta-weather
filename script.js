@@ -65,7 +65,7 @@ async function getWeather(city) {
     weatherDisplay.classList.add('hidden');
 
     try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${currentUnit}`);
 
         if (!response.ok) {
             if (response.status === 404) {
